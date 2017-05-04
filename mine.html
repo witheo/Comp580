@@ -1,0 +1,646 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Mine</title>
+
+<style>
+body {
+  margin: 0;
+  font-size: 100%;
+  background-color: #000;
+  text-align: center;
+}
+h3, h4 {
+  color:#fff;
+  font-family: monospace;
+}
+* {
+  margin: 0; padding: 0;
+}
+span {
+  white-space:nowrap;
+  line-height:1em;
+}
+a {
+  font-family: monospace;
+  font-size: 15px;
+  line-height: 70%;
+  text-decoration: none;
+}
+table {
+  margin-left:auto;
+  margin-right:auto;
+}
+td {
+  padding: 10px;
+  text-align: center;
+}
+#ascii {
+  font-family: monospace;
+  font-size: 20px;
+  line-height: 70%;
+}
+#container {
+  overflow: hidden;
+  display: inline-block;
+}
+.k {
+  color: #000;
+}
+.w {
+  color: #fff;
+}
+.r {
+  color: #f00;
+}
+.g {
+  color: #080;
+}
+.b {
+  color: #44f;
+}
+.y {
+  color: #ff0;
+}
+.o {
+  color: #f64419;
+}
+.p {
+  color: #808;
+}
+.s{
+  color: #ff007f
+}
+</style>
+
+
+<script>
+var chars = new Array(new Array());
+var mines = new Array();
+var mineCount = 30
+var edges = new Array();
+var nedges = new Array();
+var nownMines = new Array();
+var moves =new Array([0,0]);
+var cx = 21;
+var cy = 21;
+var timer;
+var time;
+var moveOptions = new Array([0,0]);
+var mvePointer = 0;
+//var numSleft=0;
+var movelist=0;
+var menueScreen=true;
+var menpoint = 0;
+var degresOfFredom = 2;
+var end =false;
+
+
+var score = 0;
+var cerx = 1
+var cery = 1
+
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function display() {
+	var ascii = document.getElementById("ascii");
+	// clear display
+	ascii.innerHTML = '';
+ 
+	// refresh display
+  for (var y = 0; y < cy; y++) {
+		var line = document.createElement("span");
+		for (x = 0; x < cx; x++) {
+      var ch = chars[x+y*cx];
+			var cspan = document.createElement("span");
+			cspan.setAttribute("class", ch[1]);
+			cspan.appendChild(document.createTextNode(ch[0]));
+			line.appendChild(cspan);
+		}
+		ascii.appendChild(line);
+		ascii.appendChild(document.createElement("br"));
+	}
+}
+
+function loadBoard() {
+  time = 400;
+  score = 0;
+  clearInterval(timer);
+
+  for (var y = 0; y < cy; y++) {
+		for (x = 0; x < cx; x++) {
+        chars[x+y*cx] = new Array('+', 'w');
+    }
+  }
+  timer = setInterval(displayLoop, time);
+}
+
+function stringToArray(str) {
+  var arr = new Array();
+  for (var i = 0; i < str.length; i++) {
+    arr.push(str.charAt(i));
+  }
+  return arr;
+}
+function move(str){
+  chars[cerx+cery*cx]=new Array('.', 'k')
+  if (str=='up'){
+    cery--
+  }
+  if (str== 'down'){
+    cery++
+  }
+  if (str == 'right'){
+    cerx++
+  }
+  if (str == 'left'){
+    cerx--
+  }
+  //chars[cerx+cery*cx]=new Array('=', 'w')
+   display();
+}
+
+function layMines(){
+  //console.log("hello");
+  mines= new Array(cx+cy*cx).fill(0);
+  for (var i= 0; i< mineCount; i++){
+    var y = getRandomInt(0,cy-1);
+    var x = getRandomInt(0,cx-1);
+    if (mines[x+y*cx] != -1){
+    mines[x+y*cx] = -1;
+    //console.log("hello");
+    number(x+1,y);
+    number(x-1,y);
+    number(x,y-1);
+    number(x,y+1);
+    number(x+1,y-1);
+    number(x+1,y+1);
+    number(x-1,y-1);
+    number(x-1,y+1);
+    //chars[x+y*cx]=new Array('X', 'w')
+    }
+    
+  }
+  
+}
+
+function play(){
+  var x =0
+  var y = 0
+  moveOptions = new Array()
+  if (moves.length > 0) {
+    var z=moves.pop();
+    x =z[0];
+    y =z[1];
+   while (chars[x+y*cx][0] != '+' && moves.length > 0 ){
+      z=moves.pop();
+      x =z[0];
+      y =z[1];
+   }
+    if (chars[x+y*cx][0] == '+'){
+      moveOptions = new Array([x,y]);
+      console.log(moves);
+      //chars[x+y*cx][1] = 'r'
+    }
+  }
+  
+  x++;
+  
+  if (moveOptions.length< 1){
+    while (moveOptions.length < degresOfFredom){
+     //console.log("hi")
+     randmove(x, y, true)
+     x++
+  }
+  }else{
+    while (moveOptions.length < degresOfFredom){
+     //console.log("hi")
+     randmove(x, y)
+     x++
+    }
+  }
+  
+  movelist = getRandomInt(0,moveOptions.length-1)
+  chars[moveOptions[movelist][0]+moveOptions[movelist][1]*cx][1]='g'
+}
+
+
+function randmove(x, y, protect = false){
+  while(chars[x+y*cx][0] != '+'  || inMoveOptions(x, y) || protectedMineCheck(x, y, protect) ){
+     console.log(chars[x+y*cx]);
+     x++;
+     if (x > cx-1){
+      x=0;
+      y++;
+      if (y > cy-1){
+        x=0;
+        y=0;
+      }
+     }
+  }
+   var x2 = x;
+   var y2 = y;
+   //chars[x+y*cx][1] = 'b'
+   moveOptions.push([x2,y2])
+   console.log(moveOptions);
+}
+
+function inMoveOptions(x, y){
+  for (i=0; i <moveOptions.length; i++ ){
+     if (moveOptions[i][0]==x && moveOptions[i][1]==y){
+       return true;
+     }
+   }
+   return false;
+}
+function protectedMineCheck(x, y, protect){
+  if (protect){
+    if (mines[x+y*cx] < 0){
+      return true;
+    }
+  }
+  return false;
+}
+
+function makemove(x,y){
+   
+   edges.push(new Array(x,y))
+   //console.log(edges.length)
+   while(edges.length > 0){
+    xy = edges.pop();
+    x=xy[0];
+    y=xy[1];
+    //console.log(x,y);
+    if (mines[x+y*cx] == 0){
+      chars[x+y*cx] = new Array('.', 'k');
+    }else{
+      chars[x+y*cx] = new Array( mines[x+y*cx], 'w');
+    }
+      addToEdges(x+1,y);
+      addToEdges(x-1,y);
+      addToEdges(x,y-1);
+      addToEdges(x,y+1);
+  }
+  //find known mines
+  for (i=0; i<nedges.length; i++){
+    //console.log(nedges[i][0],nedges[i][1]);
+    x=nedges[i][0];
+    y=nedges[i][1];
+    var num = 0 //mines[x+y*cx]
+    var corect = new Array();
+    
+    if (checkMine(x-1,y)){
+      corect.push([x-1,y]);
+      num++;
+    }
+    if (checkMine(x+1,y)){
+      corect.push([x+1,y]);
+      num++;
+    }
+    if (checkMine(x-1,y+1)){
+      corect.push([x-1,y+1]);
+      num++;
+    }
+     if (checkMine(x-1,y-1)){
+      corect.push([x-1,y-1]);
+      num++;
+    }
+    if (checkMine(x+1,y+1)){
+      corect.push([x+1,y+1]);
+      num++;
+    }
+     if (checkMine(x+1,y-1)){
+      corect.push([x+1,y-1]);
+      num++;
+    }
+     if (checkMine(x,y-1)){
+      corect.push([x,y-1]);
+      num++;
+    }
+     if (checkMine(x,y+1)){
+      corect.push([x,y+1]);
+      num++;
+    }
+    //console.log(num+"----"+mines[x+y*cx]+"+"+x+"+"+y);
+    if (num == mines[x+y*cx] && mines[x+y*cx] != 0){
+      for (j=0;j<corect.length;j++){
+        if (mines[corect[j][0]+corect[j][1]*cx] <0){
+          //chars[corect[j][0]+corect[j][1]*cx] = new Array('+','r');
+          mines[corect[j][0]+corect[j][1]*cx] = -2;
+        }else{
+          //chars[corect[j][0]+corect[j][1]*cx] = new Array('+','o');
+        }
+      }
+    }
+  }
+  //find moves
+  for (i=0; i<nedges.length; i++){
+    //console.log(nedges[i][0],nedges[i][1]);
+    x=nedges[i][0];
+    y=nedges[i][1];
+    var num = 0 //mines[x+y*cx]
+    var corect = new Array();
+    if (ceckMinePass2(x-1,y)){
+      corect.push([x-1,y]);
+      num++;
+    }
+    if (ceckMinePass2(x+1,y)){
+      corect.push([x+1,y]);
+      num++;
+    }
+    if (ceckMinePass2(x-1,y+1)){
+      corect.push([x-1,y+1]);
+      num++;
+    }
+     if (ceckMinePass2(x-1,y-1)){
+      corect.push([x-1,y-1]);
+      num++;
+    }
+    if (ceckMinePass2(x+1,y+1)){
+      corect.push([x+1,y+1]);
+      num++;
+    }
+     if (ceckMinePass2(x+1,y-1)){
+      corect.push([x+1,y-1]);
+      num++;
+    }
+     if (ceckMinePass2(x,y-1)){
+      corect.push([x,y-1]);
+      num++;
+    }
+     if (ceckMinePass2(x,y+1)){
+      corect.push([x,y+1]);
+      num++;
+    }
+    //console.log(num+"----"+mines[x+y*cx]+"+"+x+"+"+y);
+    if (num == mines[x+y*cx] && mines[x+y*cx] != 0){
+      for (j=0;j<corect.length;j++){
+        if (mines[corect[j][0]+corect[j][1]*cx]>-1){
+          //chars[corect[j][0]+corect[j][1]*cx] = new Array('+','g');
+        //mines[corect[j][0]+corect[j][1]*cx] = -2;
+        moves.push([corect[j][0], corect[j][1]]);
+        }else{
+          //chars[corect[j][0]+corect[j][1]*cx] = new Array('+','p');
+        }
+        
+      }
+    }
+  }
+}
+
+function ceckMinePass2(x,y){
+  var num = 0 //mines[x+y*cx]
+  var corect=new Array();
+  if (x>-1 && y >-1 && y< cy && x<cx && chars[x+y*cx][0] =='+' && mines[x+y*cx] != -2){
+     return true;
+  }
+  return false;
+}
+
+function checkMine(x,y){
+  var num = 0 //mines[x+y*cx]
+  var corect=new Array();
+  if (x>-1 && y >-1 && y< cy && x<cx && chars[x+y*cx][0] =='+' ){
+     return true;
+  }
+  return false;
+}
+
+
+function addToEdges(x,y){
+  if (mines[x+y*cx] == 0 && x>-1 && y >-1 && y< cy && x<cx && chars[x+y*cx][0]!='.' ){
+    for(i=0; i<edges; i++){
+      if (edges[i][0] == x && edges[i][1] == y){
+        return;
+      }
+    }
+    edges.push([x,y]);
+  }else if ( x>-1 && y >-1 && y< cy && x<cx && chars[x+y*cx][0]!='.' && mines[x+y*cx]>-1){
+   chars[x+y*cx]=new Array( mines[x+y*cx], 'w');
+   nedges.push([x,y]);
+  }
+}
+
+
+function number(x, y){
+  if (mines[x+y*cx] != -1 && x>-1 && y>-1 && y<cy && x<cx){
+    mines[x+y*cx]++;
+    //console.log(mines[x+y*cx]);
+    //chars[x+y*cx]=new Array( mines[x+y*cx], 'w');
+  }
+}
+
+function displayLoop()
+{
+  display();
+}
+
+function gameover(){
+  var over = "Game Over"
+  var x= (cx / 2 )- (over.length / 2 );
+  var y = 10
+  for (i=0; i< over.length; i++){
+    chars[i+x+y*cx][0] = over[i];
+    chars[i+x+y*cx][1] = "w";
+  }
+  displayLoop();
+}
+
+function win(){
+  for (var y = 0; y < cy; y++) {
+		for (x = 0; x < cx; x++) {
+        chars[x+y*cx] = new Array('.', 'k');
+    }
+  }
+  var over = "You Win"
+  var x= (cx / 2 )- (over.length / 2 );
+  var y = 10
+  for (i=0; i< over.length; i++){
+    chars[i+x+y*cx][0] = over[i];
+    chars[i+x+y*cx][1] = "w";
+  }
+  displayLoop();
+}
+
+function numleft(){
+  var numSleft=0;
+  for (var y = 0; y < cy; y++) {
+		for (x = 0; x < cx; x++) {
+        if(chars[x+y*cx][0] == "+"){
+          numSleft ++;
+        }
+    }
+  }
+  return numSleft
+}
+
+function menue(){
+  menpoint =0;
+  var menue ="MINESWEEPER"
+  for (var y = 0; y < cy; y++) {
+		for (x = 0; x < cx; x++) {
+        chars[x+y*cx] = new Array('.', 'k');
+    }
+  }
+  var x=(cx / 2 )- (menue.length / 2 );
+  var y = 1
+  
+  for( i=0; i<menue.length; i++){
+    chars[i+x +y*cx][0]=menue[i];
+    chars[i+x +y*cx][1]="w";
+  }
+  menue ="Degrees of freedom"
+  x=0
+  y=2
+  for( i=0; i<menue.length; i++){
+    chars[i+x +y*cx][0]=menue[i];
+    chars[i+x +y*cx][1]="w";
+  }
+    chars[0 +3*cx][0]="2";
+    chars[0 +3*cx][1]="w";
+    
+    chars[1 +3*cx][0]="<";
+    chars[1 +3*cx][1]="w";
+    
+    chars[0 +4*cx][0]="3";
+    chars[0 +4*cx][1]="w";
+    
+    chars[0 +5*cx][0]="5";
+    chars[0 +5*cx][1]="w";
+  
+}
+
+
+
+function init() {
+  menue()
+  //loadBoard();
+  //layMines();
+  //makemove(0,0);
+  //play();
+  //displayLoop();
+  
+  
+  // key handler
+  var bd = document.getElementById("bd");
+  bd.onkeydown = function(event) {
+    switch (event.keyCode) {
+      case 37: // left
+        if (end){
+          menue()
+          end =false;
+          menueScreen =true;
+          break;
+        }
+        
+        if (menueScreen != true){
+          if (mines[moveOptions[movelist][0]+moveOptions[movelist][1]*cx]<0){
+            gameover()
+            end = true;
+            break;
+        }
+          if (numleft() - mineCount < degresOfFredom+1){
+            win();
+            break;
+          }
+          makemove(moveOptions[movelist][0],moveOptions[movelist][1])
+          if (chars[moveOptions[movelist][0]+moveOptions[movelist][1]*cx][0]!='.')
+          chars[moveOptions[movelist][0]+moveOptions[movelist][1]*cx][1]='w'
+          play();
+        }else{
+          
+          if (menpoint==0){
+            degresOfFredom =2;
+          }
+          if (menpoint==1){
+            degresOfFredom =3;
+          }
+          if (menpoint==2){
+            degresOfFredom =5;
+          }
+          
+          loadBoard();
+          layMines();
+          play();
+          displayLoop();
+          menueScreen =false;
+        }
+        
+        
+        break;
+      case 38: // up
+       move('up')
+        break;
+      case 39: // right
+        if (end){
+          menue()
+          end =false;
+          menueScreen =true;
+          break;
+        }
+        if (menueScreen != true){
+          chars[moveOptions[movelist][0]+moveOptions[movelist][1]*cx][1]='w'
+          movelist++
+          if (movelist >moveOptions.length-1 ){
+            movelist = 0
+          }
+          chars[moveOptions[movelist][0]+moveOptions[movelist][1]*cx][1]='g'
+        }else{
+          chars[1+ +(3+menpoint)*cx][0]=".";
+          chars[1+ +(3+menpoint)*cx][1]="k";
+          menpoint ++
+          if(menpoint > 2){
+            menpoint =0;
+          }
+          chars[1+ +(3+menpoint)*cx][0]="<";
+          chars[1+ +(3+menpoint)*cx][1]="w";
+          
+        }
+        
+        break;
+      case 40: // down
+        move('down')
+        break;
+      case 32: // Space
+        play();
+        break;
+      case 80: // P
+        if (!timer) {
+          timer = setInterval(displayLoop, time);
+        } else {
+          clearInterval(timer);
+          timer = 0;
+        }
+        break;
+      case 82: // R
+        loadBoard();
+        break;
+    }
+    display();
+  }
+  display();
+}
+
+</script>
+                                                                                                                                                     
+
+</head>
+
+<body id="bd" onload="init();">
+  <br><br>
+  <table><tr><td>
+  <div id="container">
+    <div id="ascii"></div>
+  </div>
+</td><td>
+<div>
+  <h4 id="status">Score: 0</h4>
+  <h4>Just Press space</h4>
+  <div><span class="k">..</span><span class="o">__</span><span class="k">..</span><br><span class="o">(</span><span class="w">0..0</span><span class="o">)</span><br> <span class="k">..</span><span class="w">vv</span><span class="k">..</span><br><span class="w">F </span><span class="o">N </span><span class="b">G</span></div>
+  </div>
+  </td></tr></table>
+</body>
+</html>
