@@ -191,39 +191,45 @@ function play(){
   var x =0
   var y = 0
   moveOptions = new Array()
+  
   if (moves.length > 0) {
     var z=moves.pop();
     x =z[0];
     y =z[1];
-   while (chars[x+y*cx][0] != '+' && moves.length > 0 ){
+   while ((chars[x+y*cx][0] != '+' || mines[x+y*cx] < 0) && moves.length > 0){
       z=moves.pop();
       x =z[0];
       y =z[1];
    }
-    if (chars[x+y*cx][0] == '+'){
+    if (chars[x+y*cx][0] == '+' && mines[x+y*cx] > -1){
       moveOptions = new Array([x,y]);
       console.log(moves);
-      //chars[x+y*cx][1] = 'r'
+      chars[x+y*cx][1] = 'r'
     }
   }
   
   x++;
   
   if (moveOptions.length< 1){
-    while (moveOptions.length < degresOfFredom){
+    while (moveOptions.length < degresOfFredom && numleft() - mineCount -moveOptions.length > 0){
      //console.log("hi")
      randmove(x, y, true)
      x++
-  }
+    }
   }else{
-    while (moveOptions.length < degresOfFredom){
+    while (moveOptions.length < degresOfFredom && numleft() - mineCount -moveOptions.length > 0){
      //console.log("hi")
      randmove(x, y)
      x++
     }
   }
-  
+  console.log(moveOptions);
   movelist = getRandomInt(0,moveOptions.length-1)
+  if (moveOptions.length==0){
+    win();
+    end=true;
+    return;
+  }
   chars[moveOptions[movelist][0]+moveOptions[movelist][1]*cx][1]='g'
 }
 
@@ -499,17 +505,22 @@ function menue(){
     chars[i+x +y*cx][0]=menue[i];
     chars[i+x +y*cx][1]="w";
   }
-    chars[0 +3*cx][0]="2";
-    chars[0 +3*cx][1]="w";
-    
     chars[1 +3*cx][0]="<";
     chars[1 +3*cx][1]="w";
     
-    chars[0 +4*cx][0]="3";
+    chars[0 +3*cx][0]="1";
+    chars[0 +3*cx][1]="w";
+    
+    chars[0 +4*cx][0]="2";
     chars[0 +4*cx][1]="w";
     
-    chars[0 +5*cx][0]="5";
+    
+    
+    chars[0 +5*cx][0]="3";
     chars[0 +5*cx][1]="w";
+    
+    chars[0 +6*cx][0]="5";
+    chars[0 +6*cx][1]="w";
   
 }
 
@@ -542,8 +553,9 @@ function init() {
             end = true;
             break;
         }
-          if (numleft() - mineCount < degresOfFredom+1){
+          if (numleft() - mineCount < 2){
             win();
+            end = true;
             break;
           }
           makemove(moveOptions[movelist][0],moveOptions[movelist][1])
@@ -551,14 +563,17 @@ function init() {
           chars[moveOptions[movelist][0]+moveOptions[movelist][1]*cx][1]='w'
           play();
         }else{
-          
           if (menpoint==0){
+            degresOfFredom =1;
+          }
+          
+          if (menpoint==1){
             degresOfFredom =2;
           }
-          if (menpoint==1){
+          if (menpoint==2){
             degresOfFredom =3;
           }
-          if (menpoint==2){
+          if (menpoint==3){
             degresOfFredom =5;
           }
           
