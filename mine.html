@@ -445,6 +445,12 @@ function displayLoop()
 }
 
 function gameover(){
+  for (var y = 0; y < cy; y++) {
+		for (x = 0; x < cx; x++) {
+        if (mines[x+y*cx]<0)
+          chars[x+y*cx] = new Array('*', 'r');
+    }
+	}
   var over = "Game Over"
   var x= (cx / 2 )- (over.length / 2 );
   var y = 10
@@ -553,7 +559,7 @@ function init() {
             end = true;
             break;
         }
-          if (numleft() - mineCount < 2){
+          if (numleft() - mineCount < 1){
             win();
             end = true;
             break;
@@ -587,7 +593,7 @@ function init() {
         
         break;
       case 38: // up
-       move('up')
+       //move('up')
         break;
       case 39: // right
         if (end){
@@ -617,7 +623,7 @@ function init() {
         
         break;
       case 40: // down
-        move('down')
+        //move('down')
         break;
       case 32: // Space
         play();
